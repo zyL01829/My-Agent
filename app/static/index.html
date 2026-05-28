@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>个人管家 Agent</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">A</div>
+        <div>
+          <strong>个人管家 Agent</strong>
+          <span>Local Multi-Agent Console</span>
+        </div>
+      </div>
+      <nav>
+        <button class="nav-item active" data-view="dashboard">概览</button>
+        <button class="nav-item" data-view="learning">学习</button>
+        <button class="nav-item" data-view="knowledge">知识库</button>
+        <button class="nav-item" data-view="ppt">PPT</button>
+        <button class="nav-item" data-view="frontier">前沿</button>
+      </nav>
+      <details class="agent-drawer" id="agentDrawer">
+        <summary>
+          <span>Agent 状态</span>
+          <strong id="agentSummary">0 启用</strong>
+        </summary>
+        <div class="agent-list" id="agentList"></div>
+      </details>
+    </aside>
+
+    <main>
+      <header class="topbar">
+        <div>
+          <h1 id="pageTitle">今日工作台</h1>
+          <p id="pageSubtitle">学习提醒、前沿日报和 Agent 任务统一展示。</p>
+        </div>
+        <button class="ghost-button" id="refreshBtn">刷新</button>
+      </header>
+
+      <section class="view active" id="dashboard">
+        <div class="metrics">
+          <div class="metric">
+            <span>未读提醒</span>
+            <strong id="unreadCount">0</strong>
+          </div>
+          <div class="metric">
+            <span>学习计划</span>
+            <strong id="planCount">0</strong>
+          </div>
+          <div class="metric">
+            <span>知识文件</span>
+            <strong id="fileCount">0</strong>
+          </div>
+          <div class="metric">
+            <span>前沿日报</span>
+            <strong id="reportCount">0</strong>
+          </div>
+        </div>
+
+        <div class="grid two">
+          <section class="panel">
+            <div class="panel-head">
+              <h2>消息中心</h2>
+              <span>页面内通知</span>
+            </div>
+            <div class="list" id="notificationList"></div>
+          </section>
+          <section class="panel">
+            <div class="panel-head">
+              <h2>今日学习</h2>
+              <span>打开页面自动补偿检查</span>
+            </div>
+            <div id="todayLearning" class="empty">暂无学习计划，先创建一个。</div>
+          </section>
+        </div>
+      </section>
+
+      <section class="view" id="learning">
+        <div class="grid two">
+          <form class="panel form" id="learningForm">
+            <div class="panel-head">
+              <h2>创建学习计划</h2>
+              <span>支持调用知识库</span>
+            </div>
+            <label>学习主题<input name="topic" required placeholder="例如：深度学习基础" /></label>
+            <label>学习天数<input name="duration_days" type="number" value="14" min="1" max="365" /></label>
+            <label>每日分钟<input name="daily_minutes" type="number" value="60" min="10" max="600" /></label>
+            <label>目标程度<input name="target_level" value="入门到可独立实践" /></label>
+            <label class="check"><input name="use_knowledge" type="checkbox" checked /> 使用 RAG 知识库</label>
+            <button type="submit">生成计划</button>
+          </form>
+          <section class="panel">
+            <div class="panel-head">
+              <h2>计划列表</h2>
+              <span>最近创建</span>
+            </div>
+            <div class="list" id="learningPlans"></div>
+          </section>
+        </div>
+      </section>
+
+      <section class="view" id="knowledge">
+        <div class="grid two">
+          <form class="panel form" id="uploadForm">
+            <div class="panel-head">
+              <h2>上传资料</h2>
+              <span>PDF / Word / PPT / MD / TXT</span>
+            </div>
+            <label>文件<input name="file" type="file" required /></label>
+            <label>标签<input name="tags" placeholder="学习, 论文, PPT素材" /></label>
+            <button type="submit">入库</button>
+          </form>
+          <form class="panel form" id="queryForm">
+            <div class="panel-head">
+              <h2>知识库问答</h2>
+              <span>返回引用来源</span>
+            </div>
+            <label>问题<textarea name="query" required placeholder="这批资料的核心观点是什么？"></textarea></label>
+            <button type="submit">检索</button>
+          </form>
+        </div>
+        <div class="grid two">
+          <section class="panel">
+            <div class="panel-head">
+              <h2>文件</h2>
+              <span>本地存储</span>
+            </div>
+            <div class="list" id="knowledgeFiles"></div>
+          </section>
+          <section class="panel">
+            <div class="panel-head">
+              <h2>检索结果</h2>
+              <span>RAG</span>
+            </div>
+            <div id="queryResult" class="result empty">暂无检索。</div>
+          </section>
+        </div>
+      </section>
+
+      <section class="view" id="ppt">
+        <div class="grid two">
+          <form class="panel form" id="pptForm">
+            <div class="panel-head">
+              <h2>生成 PPT</h2>
+              <span>可引用知识库</span>
+            </div>
+            <label>主题<input name="topic" required placeholder="例如：AI Agent 技术路线" /></label>
+            <label>受众<input name="audience" value="通用受众" /></label>
+            <label>风格<input name="style" value="清爽专业" /></label>
+            <label>页数<input name="slides" type="number" value="6" min="3" max="30" /></label>
+            <label class="check"><input name="use_knowledge" type="checkbox" checked /> 使用 RAG 知识库</label>
+            <button type="submit">生成 PPT</button>
+          </form>
+          <section class="panel">
+            <div class="panel-head">
+              <h2>PPT 任务</h2>
+              <span>生成记录</span>
+            </div>
+            <div class="list" id="pptJobs"></div>
+          </section>
+        </div>
+      </section>
+
+      <section class="view" id="frontier">
+        <section class="panel">
+          <div class="panel-head">
+            <h2>前沿日报</h2>
+            <button class="small-button" id="runFrontier">立即生成</button>
+          </div>
+          <div class="list" id="frontierReports"></div>
+        </section>
+      </section>
+    </main>
+
+    <script src="/static/app.js"></script>
+  </body>
+</html>

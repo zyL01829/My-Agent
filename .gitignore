@@ -1,0 +1,10 @@
+.pycache/
+__pycache__/
+*.pyc
+data/agent.db
+data/uploads/*
+data/generated/*
+data/chroma/*
+!data/uploads/.gitkeep
+!data/generated/.gitkeep
+!data/chroma/.gitkeep
