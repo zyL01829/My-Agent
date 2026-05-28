@@ -41,6 +41,11 @@ class ProgressRequest(BaseModel):
     notes: str = ""
 
 
+class LearningPlanUpdateRequest(BaseModel):
+    duration_days: int = Field(ge=1, le=365)
+    daily_minutes: int = Field(ge=10, le=600)
+
+
 class QueryRequest(BaseModel):
     query: str
     limit: int = Field(default=5, ge=1, le=20)
@@ -56,6 +61,12 @@ class PPTRequest(BaseModel):
 
 class RouteRequest(BaseModel):
     message: str
+
+
+class LearningChatRequest(BaseModel):
+    plan_id: int
+    message: str
+    selected_day: Optional[int] = None
 
 
 @app.on_event("startup")
@@ -152,9 +163,29 @@ def list_learning_plans():
     return learning_agent.list_plans()
 
 
+@app.get("/api/learning/plans/{plan_id}")
+def get_learning_plan(plan_id: int):
+    return learning_agent.get_plan_detail(plan_id)
+
+
+@app.patch("/api/learning/plans/{plan_id}")
+def update_learning_plan(plan_id: int, req: LearningPlanUpdateRequest):
+    return learning_agent.update_plan_settings(plan_id, req.duration_days, req.daily_minutes)
+
+
+@app.delete("/api/learning/plans/{plan_id}")
+def delete_learning_plan(plan_id: int):
+    return learning_agent.delete_plan(plan_id)
+
+
 @app.post("/api/learning/progress")
 def record_progress(req: ProgressRequest):
     return learning_agent.record_progress(req.plan_id, req.day_index, req.completion, req.mastery, req.notes)
+
+
+@app.post("/api/learning/chat")
+def learning_chat(req: LearningChatRequest):
+    return learning_agent.chat(req.plan_id, req.message, req.selected_day)
 
 
 @app.post("/api/ppt/generate")

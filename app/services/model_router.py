@@ -1,11 +1,32 @@
 from __future__ import annotations
 
+import json
 import os
+import urllib.error
+import urllib.request
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Dict, Literal
 
 
 Complexity = Literal["cheap", "default", "strong"]
+
+
+BASE_DIR = Path(__file__).resolve().parents[2]
+
+
+def load_local_env() -> None:
+    env_path = BASE_DIR / ".env"
+    if not env_path.exists():
+        return
+    for line in env_path.read_text(encoding="utf-8").splitlines():
+        if not line.strip() or line.strip().startswith("#") or "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        os.environ.setdefault(key.strip(), value.strip())
+
+
+load_local_env()
 
 
 @dataclass(frozen=True)
@@ -18,14 +39,14 @@ class ModelChoice:
 
 AGENT_MODEL_RULES: Dict[str, Dict[Complexity, str]] = {
     "supervisor": {
-        "cheap": "local-heuristic",
-        "default": "deepseek-chat",
-        "strong": "gpt-4.1",
+        "cheap": "deepseek-v4-flash",
+        "default": "deepseek-v4-flash",
+        "strong": "deepseek-v4-flash",
     },
     "learning": {
-        "cheap": "local-heuristic",
-        "default": "gemini-2.5-flash",
-        "strong": "gpt-4.1",
+        "cheap": "deepseek-v4-flash",
+        "default": "deepseek-v4-flash",
+        "strong": "deepseek-v4-flash",
     },
     "ppt": {
         "cheap": "local-heuristic",
@@ -33,9 +54,9 @@ AGENT_MODEL_RULES: Dict[str, Dict[Complexity, str]] = {
         "strong": "claude-sonnet-4.5",
     },
     "frontier": {
-        "cheap": "local-heuristic",
-        "default": "deepseek-chat",
-        "strong": "gemini-2.5-pro",
+        "cheap": "deepseek-v4-flash",
+        "default": "deepseek-v4-flash",
+        "strong": "deepseek-v4-flash",
     },
 }
 
@@ -69,3 +90,55 @@ class LocalHeuristicModel:
 
 
 local_model = LocalHeuristicModel()
+
+
+class DeepSeekClient:
+    base_url = "https://api.deepseek.com/chat/completions"
+
+    def __init__(self) -> None:
+        self.api_key = os.getenv("DEEPSEEK_API_KEY", "")
+        self.model = os.getenv("DEEPSEEK_MODEL", "deepseek-v4-flash")
+
+    @property
+    def available(self) -> bool:
+        return bool(self.api_key)
+
+    def chat(self, system: str, user: str, temperature: float = 0.2, max_tokens: int = 1200) -> str:
+        if not self.available:
+            raise RuntimeError("DEEPSEEK_API_KEY is not configured.")
+        payload = {
+            "model": self.model,
+            "messages": [
+                {"role": "system", "content": system},
+                {"role": "user", "content": user},
+            ],
+            "temperature": temperature,
+            "max_tokens": max_tokens,
+        }
+        request = urllib.request.Request(
+            self.base_url,
+            data=json.dumps(payload).encode("utf-8"),
+            headers={
+                "Authorization": f"Bearer {self.api_key}",
+                "Content-Type": "application/json",
+            },
+            method="POST",
+        )
+        try:
+            with urllib.request.urlopen(request, timeout=45) as response:
+                data = json.loads(response.read().decode("utf-8"))
+        except urllib.error.HTTPError as exc:
+            body = exc.read().decode("utf-8", errors="ignore")
+            raise RuntimeError(f"DeepSeek API error {exc.code}: {body}") from exc
+        return data["choices"][0]["message"]["content"].strip()
+
+    def chat_json(self, system: str, user: str, temperature: float = 0.2, max_tokens: int = 1800) -> Dict:
+        content = self.chat(system, user, temperature=temperature, max_tokens=max_tokens)
+        cleaned = content.strip()
+        if cleaned.startswith("```"):
+            cleaned = cleaned.strip("`")
+            cleaned = cleaned.removeprefix("json").strip()
+        return json.loads(cleaned)
+
+
+deepseek_client = DeepSeekClient()

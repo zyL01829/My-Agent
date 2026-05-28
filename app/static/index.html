@@ -91,6 +91,7 @@
             <label>目标程度<input name="target_level" value="入门到可独立实践" /></label>
             <label class="check"><input name="use_knowledge" type="checkbox" checked /> 使用 RAG 知识库</label>
             <button type="submit">生成计划</button>
+            <div class="form-message" id="learningMessage" role="status"></div>
           </form>
           <section class="panel">
             <div class="panel-head">
@@ -99,6 +100,83 @@
             </div>
             <div class="list" id="learningPlans"></div>
           </section>
+        </div>
+      </section>
+
+      <section class="view" id="learningDetail">
+        <section class="panel">
+          <div class="detail-head">
+            <button class="ghost-button" id="backToLearning">返回</button>
+            <div>
+              <h2 id="detailTopic">学习计划</h2>
+              <span id="detailMeta">计划详情</span>
+            </div>
+          </div>
+          <div class="progress-block">
+            <div class="progress-line">
+              <span>任务进度</span>
+              <strong id="detailProgressText">0%</strong>
+            </div>
+            <div class="progress-track">
+              <div class="progress-fill" id="detailProgressFill"></div>
+            </div>
+          </div>
+          <form class="plan-settings" id="planSettingsForm">
+            <input name="plan_id" type="hidden" />
+            <label>学习期限<input name="duration_days" type="number" min="1" max="365" /></label>
+            <label>每日分钟<input name="daily_minutes" type="number" min="10" max="600" /></label>
+            <button type="submit">保存调整</button>
+          </form>
+          <div class="form-message" id="planSettingsMessage" role="status"></div>
+        </section>
+
+        <div class="grid two detail-grid">
+          <section class="panel">
+            <div class="panel-head">
+              <h2>学习日历</h2>
+              <span id="calendarMeta">选择日期</span>
+            </div>
+            <div class="calendar-grid" id="learningCalendar"></div>
+          </section>
+          <section class="panel">
+            <div class="panel-head">
+              <h2 id="selectedDayTitle">当日安排</h2>
+              <span id="selectedDayStatus">未完成</span>
+            </div>
+            <div id="selectedDayPlan" class="day-detail"></div>
+          </section>
+        </div>
+
+        <section class="panel">
+          <div class="panel-head">
+            <h2>学习 Agent</h2>
+            <span>围绕当前计划答疑</span>
+          </div>
+          <div class="chat-shell">
+            <div class="chat-window" id="learningChat"></div>
+            <div class="resize-handle" id="chatResizeHandle" role="separator" aria-label="调整聊天窗口高度" tabindex="0"></div>
+          </div>
+          <form class="chat-form" id="learningChatForm">
+            <input name="message" required placeholder="向学习 Agent 提问，例如：今天这部分怎么学更高效？" />
+            <button type="submit">发送</button>
+          </form>
+        </section>
+
+        <div class="task-folders">
+          <details class="task-folder" open>
+            <summary>
+              <span>未完成计划</span>
+              <strong id="pendingCount">0 项</strong>
+            </summary>
+            <div class="list compact-list" id="pendingTasks"></div>
+          </details>
+          <details class="task-folder">
+            <summary>
+              <span>已完成计划</span>
+              <strong id="doneCount">0 项</strong>
+            </summary>
+            <div class="list compact-list" id="doneTasks"></div>
+          </details>
         </div>
       </section>
 

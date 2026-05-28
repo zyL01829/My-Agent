@@ -1,6 +1,7 @@
 .pycache/
 __pycache__/
 *.pyc
+.env
 data/agent.db
 data/uploads/*
 data/generated/*
